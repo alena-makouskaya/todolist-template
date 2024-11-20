@@ -1,8 +1,12 @@
-import { store } from './../../app/store';
+import { store } from "./../../app/store";
 // initial state
 
 import { Dispatch } from "redux";
-import { TaskType, UpdateDomainTaskModelType, UpdateTaskModelType } from "../api/tasksAPI.types";
+import {
+  TaskType,
+  UpdateDomainTaskModelType,
+  UpdateTaskModelType,
+} from "../api/tasksAPI.types";
 import {
   CreateTodolistActionType,
   DeleteTodolistActionType,
@@ -10,6 +14,10 @@ import {
 } from "./todolists-reducer";
 import { tasksAPI } from "../api/tasksAPI";
 import { AppRootState } from "../../app/store";
+import { setAppStatusAC } from "../../app/app-reducer";
+import { handleServerNetworkError } from "../../common/components/utils/handleServerNetworkError";
+import { ResultCode } from "../../common/enums/enums";
+import { handleServerAppError } from "../../common/components/utils/handleServerAppError";
 
 export const initialState: InitialTaskStateType = {};
 
@@ -106,32 +114,63 @@ export const updateTaskAC = (
 
 // thunks
 export const setTasksTC = (todolistId: string) => (dispatch: Dispatch) => {
-  tasksAPI.getTasks(todolistId).then((res) => {
-    dispatch(setTasksAC(todolistId, res.data.items));
-  });
+  dispatch(setAppStatusAC("loading"));
+
+  tasksAPI
+    .getTasks(todolistId)
+    .then((res) => {
+      dispatch(setAppStatusAC("succeeded"));
+      dispatch(setTasksAC(todolistId, res.data.items));
+    })
+    .catch((error) => {
+      handleServerNetworkError(error, dispatch);
+    });
 };
 
 export const createTaskTC =
   (todolistId: string, title: string) => (dispatch: Dispatch) => {
-    tasksAPI.createTask(todolistId, title).then((res) => {
-      dispatch(createTaskAC(res.data.data.item));
-    });
+    dispatch(setAppStatusAC("loading"));
+
+    tasksAPI
+      .createTask(todolistId, title)
+      .then((res) => {
+        if (res.data.resultCode === ResultCode.Success) {
+          dispatch(setAppStatusAC("succeeded"));
+          dispatch(createTaskAC(res.data.data.item));
+        } else {
+          handleServerAppError(res.data, dispatch);
+        }
+      })
+      .catch((error) => {
+        handleServerNetworkError(error, dispatch);
+      });
   };
 
 export const deleteTaskTC =
   (todolistId: string, taskId: string) => (dispatch: Dispatch) => {
-    tasksAPI.deleteTask(todolistId, taskId).then((res) => {
-      dispatch(deleteTaskAC(todolistId, taskId));
-    });
+    dispatch(setAppStatusAC("loading"));
+
+    tasksAPI
+      .deleteTask(todolistId, taskId)
+      .then((res) => {
+        if (res.data.resultCode === ResultCode.Success) {
+          dispatch(setAppStatusAC("succeeded"));
+          dispatch(deleteTaskAC(todolistId, taskId));
+        } else {
+          handleServerAppError(res.data, dispatch);
+        }
+      })
+      .catch((error) => {
+        handleServerNetworkError(error, dispatch);
+      });
   };
 
 export const updateTaskTC =
   (todolistId: string, taskId: string, model: UpdateDomainTaskModelType) =>
   (dispatch: Dispatch, getState: () => AppRootState) => {
-
     const state = getState();
 
-    const task = state.tasks[todolistId].find((task) => task.id === taskId)
+    const task = state.tasks[todolistId].find((task) => task.id === taskId);
 
     if (!task) {
       throw new Error("task not found in the state");
@@ -145,13 +184,21 @@ export const updateTaskTC =
       startDate: task.startDate,
       deadline: task.deadline,
       status: task.status,
-      ...model
+      ...model,
     };
 
-
-    tasksAPI.updateTask(todolistId, taskId, apiModel)
+    dispatch(setAppStatusAC("loading"));
+    tasksAPI
+      .updateTask(todolistId, taskId, apiModel)
       .then((res) => {
-        dispatch(updateTaskAC(todolistId, taskId, apiModel))
+        if (res.data.resultCode === ResultCode.Success) {
+          dispatch(setAppStatusAC("succeeded"));
+          dispatch(updateTaskAC(todolistId, taskId, apiModel));
+        } else {
+          handleServerAppError(res.data, dispatch);
+        }
       })
-
+      .catch((error) => {
+        handleServerNetworkError(error, dispatch);
+      });
   };

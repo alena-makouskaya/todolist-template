@@ -2,6 +2,8 @@
   padding: 120px;
 
   display: flex;
+  flex-direction: column;
+  gap: 40px
 }
 
 .main{
@@ -139,4 +141,28 @@
 
   border: 1px solid #e5e5e5;
   border-radius: 8px;
+}
+
+.linearProgress{
+  padding: 8px 16px;
+
+  border: 1px solid green;
+  border-style: dashed;
+  border-radius: 12px;
+
+  color: green
+}
+
+.errorSnackbar{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  
+  padding: 8px 16px;
+
+  border: 1px solid red;
+  border-style: dashed;
+  border-radius: 12px;
+
+  color: red
 }
