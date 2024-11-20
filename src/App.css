@@ -94,11 +94,12 @@
 
 .taskInput{
   display: flex;
+  justify-content: space-between;
   align-items: center;
   gap: 4px;
 }
 
-.taskInput input{
+.taskCheckbox{
   width: 20px;
   height: 20px;
 }
@@ -116,7 +117,9 @@
 
 .filterTasksButtons {
   display: flex;
+
 }
+
 .filterTasksButtons button{
   padding: 8px;
 
@@ -129,4 +132,11 @@
 .isActive {
   background-color: #333333;
   color: white
+}
+
+.editableSpan {
+  padding: 8px 16px;
+
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
 }
